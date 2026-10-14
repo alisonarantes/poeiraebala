@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.3.2';
+const VERSION = '0.3.3';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -748,7 +748,7 @@ function begin() {
   if (state === 'clear') { sfx(600, .08, 'square', .05, 200); nextStory(); return; }
   if (state === 'select') startStage(ORDER[selIdx]);
   else if (state === 'title') { cheat = false; banked = 0; startCut(ORDER[0]); }
-  else if (state === 'over' && !cheat) { reset(level); state = 'play'; sfx(440, .12, 'square', .05, 300); }
+  else if (state === 'over' && !cheat) { banked = 0; startCut(ORDER[0]); sfx(440, .12, 'square', .05, 300); }
   else { state = 'select'; sfx(600, .08, 'square', .05, 200); }
 }
 function onPress(k) {
@@ -2802,7 +2802,7 @@ function draw() {
     text('FIM DE JOGO', W / 2, 110, '#e25a3a', 14, 'center');
     text('GRANA $' + score, W / 2, 146, '#fff', 8, 'center');
     text('RECORDE $' + hi, W / 2, 162, '#e9b44c', 8, 'center');
-    if (Math.floor(time * 2) % 2 === 0 || true) text('ENTER: ESCOLHER FASE', W / 2, 200, '#fff', 8, 'center');
+    if (Math.floor(time * 2) % 2 === 0 || true) text(cheat ? 'ENTER: ESCOLHER FASE' : 'ENTER: RECOMEÇAR DO INÍCIO', W / 2, 200, '#fff', 8, 'center');
   }
   if (state === 'clear') {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
