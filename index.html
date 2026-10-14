@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.3.5';
+const VERSION = '0.3.6';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -388,11 +388,11 @@ const groundTile = (() => {
 
 function reset(lv = 1, carry = null) {
   level = lv; LEVEL = [3400, 3800, 3396, 3700, 3900, 4100, 3800, 1300, 5600, 3800, 3600, 4300][lv - 1]; XMIN = [56, 12, 72, 30, 30, 30, 40, 56, 30, 40, 30, 30][lv - 1]; XMAX = [200, 244, 184, 226, 226, 226, 216, 200, 226, 216, 226, 226][lv - 1];
-  scroll = 0; time = 0; if (!carry) { score = banked; earned = 0; } npcs = []; shopNpc = null; chief = null; obst = []; herd = []; eggs = []; bannerT = 2.6;
+  scroll = 0; time = 0; score = banked; earned = 0; npcs = []; shopNpc = null; chief = null; obst = []; herd = []; eggs = []; bannerT = 2.6;
   bullets = []; ebullets = []; bombs = []; enemies = []; barrels = []; items = []; maids = []; parts = []; texts = [];
   boss = null; bossDone = false; clearT = 0; overT = 0; mount = null;
   const base = { x: W / 2, y: H - 50, lives: hard ? 3 : 5, weapon: 'rev', horse: lv === 9, boots: 0, rifle: 0, cd: 0, inv: 2, alive: true, dead: 0, walk: 0, flash: 0, aim: 'f' };
-  p = carry ? Object.assign(base, { lives: carry.lives, weapon: carry.weapon, horse: carry.horse, boots: carry.boots, rifle: carry.rifle }) : base;
+  p = carry ? Object.assign(base, { lives: carry.lives, weapon: carry.weapon, horse: lv === 9 || carry.horse, boots: carry.boots, rifle: carry.rifle, gatT: carry.gatT || 0 }) : base;
   buildWorld();
   placeMerchant();
   makeEggs();
@@ -703,14 +703,14 @@ const STORY = {
       ['A FAZENDA SERÁ RECONSTRUÍDA.', 'O VALE DA POEIRA ENFIM', 'RESPIRA EM PAZ.'],
       ['CAL MONTA SEU CAVALO E', 'SEGUE PARA O POENTE...', 'FIM']]
 };
-let cutLv = 0, cutPage = 0, cutT = 0;
+let cutLv = 0, cutPage = 0, cutT = 0, carryP = null;
 function startCut(lv) { cutLv = lv; cutPage = 0; cutT = 0; state = 'cut'; sfx(300, .15, 'square', .04, 200); }
 function cutChars() { return STORY[cutLv][cutPage].join('').length; }
 function cutAdvance() {
   if (Math.floor(cutT * 34) < cutChars()) { cutT = 99; return; }
   if (cutPage < STORY[cutLv].length - 1) { cutPage++; cutT = 0; sfx(500, .05, 'square', .04); return; }
   if (cutLv === 0) { state = cheat ? 'select' : 'title'; sfx(600, .08, 'square', .05, 200); return; }
-  reset(cutLv); state = 'play'; sfx(440, .12, 'square', .05, 300);
+  reset(cutLv, carryP); carryP = null; state = 'play'; sfx(440, .12, 'square', .05, 300);
 }
 let cutLastN = 0;
 function drawCut() {
@@ -747,10 +747,10 @@ let cheat = false, codeBuf = [], cornerTaps = 0, cornerT = 0;
 const SECRET = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright'];
 function openSelect() { cheat = true; state = 'select'; sfx(600, .08, 'square', .05, 200); setTimeout(() => sfx(900, .1, 'square', .05), 90); }
 function begin() {
-  if (state === 'clear') { sfx(600, .08, 'square', .05, 200); nextStory(); return; }
-  if (state === 'select') startStage(ORDER[selIdx]);
-  else if (state === 'title') { cheat = false; banked = 0; startCut(ORDER[0]); }
-  else if (state === 'over' && !cheat) { banked = 0; startCut(ORDER[0]); sfx(440, .12, 'square', .05, 300); }
+  if (state === 'clear') { sfx(600, .08, 'square', .05, 200); carryP = cheat ? null : { lives: p.lives, weapon: p.weapon, horse: p.horse, boots: p.boots, rifle: p.rifle, gatT: p.gatT }; nextStory(); return; }
+  if (state === 'select') { carryP = null; startStage(ORDER[selIdx]); }
+  else if (state === 'title') { cheat = false; banked = 0; carryP = null; startCut(ORDER[0]); }
+  else if (state === 'over' && !cheat) { banked = 0; carryP = null; startCut(ORDER[0]); sfx(440, .12, 'square', .05, 300); }
   else { state = 'select'; sfx(600, .08, 'square', .05, 200); }
 }
 function onPress(k) {
