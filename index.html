@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.3.3';
+const VERSION = '0.3.4';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -986,7 +986,10 @@ function bossAI(b, dt) {
   const ft = b.ft = (b.ft || 0) + dt, L = level, rage = b.hp / b.max < .4;
   const fan = (n, sp, spread) => { for (let i = 0; i < n; i++) { const a = Math.PI / 2 + (i - (n - 1) / 2) * spread; ebullets.push({ x: b.x, y: b.y + 12, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }); } };
   const ring = (n, sp, a0) => { for (let i = 0; i < n; i++) { const a = a0 + i / n * 6.283; ebullets.push({ x: b.x, y: b.y + 8, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp }); } };
-  const ease = (tx, k) => { b.x += (tx - b.x) * Math.min(1, k * dt); };
+  // ao terminar um golpe de avanco, o chefe volta a patrulhar de forma gradual (sem teleportar para o canto)
+  if ((b._pm === 'back' || b._pm === 'rise') && b.mode !== b._pm) b.soft = 1.5;
+  b._pm = b.mode; if (b.soft > 0) b.soft = Math.max(0, b.soft - dt);
+  const ease = (tx, k) => { if (b.soft > 0) k = Math.max(1.5, Math.min(k, k * (1 - b.soft / 1.5))); b.x += (tx - b.x) * Math.min(1, k * dt); };
   const bombLine = () => {
     const gx = Math.max(50, Math.min(206, p.x + rnd(-40, 40)));
     for (const x of [34, 70, 106, 142, 178, 214]) if (Math.abs(x - gx) > 36) bombs.push({ sx: b.x, sy: b.y + 12, x: b.x, y: b.y + 12, tx: x, ty: Math.max(60, Math.min(H - 40, p.y - 10)), z: 0, t: 0, fly: 1.1, st: 'fly', fuse: .75, bt: 0 });
