@@ -66,10 +66,10 @@
     position: absolute; left: 50%; top: 50%; width: 40%; height: 40%; margin: -20% 0 0 -20%;
     border-radius: 50%; background: var(--gold); box-shadow: 0 3px 0 var(--rust); pointer-events: none;
   }
-  .aim { display: flex; gap: 8px; }
+  .aim { display: flex; gap: 12px; }
   .aim button {
-    width: clamp(62px, 16vmin, 108px); height: clamp(62px, 16vmin, 108px); border-radius: 8px; border: 3px solid var(--frame);
-    background: var(--sand); color: var(--ink); font: clamp(22px, 5vmin, 38px) "Barlow Condensed", sans-serif;
+    width: clamp(84px, 22vmin, 140px); height: clamp(84px, 22vmin, 140px); border-radius: 8px; border: 3px solid var(--frame);
+    background: var(--sand); color: var(--ink); font: clamp(32px, 8vmin, 56px) "Barlow Condensed", sans-serif;
     box-shadow: 0 4px 0 var(--rust); touch-action: none; -webkit-tap-highlight-color: transparent; padding: 0;
   }
   .aim button.on { background: var(--gold); transform: translateY(3px); box-shadow: 0 1px 0 var(--rust); }
@@ -88,7 +88,6 @@
   <div id="joy" aria-label="Mover"><div id="knob"></div></div>
   <div class="aim" aria-label="Mira">
     <button type="button" data-aim="l" aria-label="Atirar na diagonal esquerda">↖</button>
-    <button type="button" data-aim="f" aria-label="Atirar à frente">▲</button>
     <button type="button" data-aim="r" aria-label="Atirar na diagonal direita">↗</button>
     <button type="button" id="jumpBtn" aria-label="Pular" style="display:none;font-size:clamp(13px,3vmin,22px)">PULAR</button>
   </div>
@@ -97,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.3.0';
+const VERSION = '0.3.2';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -760,6 +759,7 @@ function onPress(k) {
   if (state === 'shop') { shopKey(k); return; }
   if (state === 'select') { const mv = n => { if (n >= 0 && n < 12) { selIdx = n; sfx(500, .05, 'square', .04); } }; if (['arrowleft', 'arrowright', 'a', 'd'].includes(k)) mv(selIdx ^ 1); if (['arrowup', 'w'].includes(k)) mv(selIdx - 2); if (['arrowdown', 's'].includes(k)) mv(selIdx + 2); }
   if (state === 'pause' && k === 'backspace') { state = cheat ? 'select' : 'title'; return; }
+  if ((k === 'enter' || k === ' ') && audioGate()) return;
   if (k === 'enter' || k === ' ') { if (state === 'title' || state === 'over' || state === 'clear' || state === 'select') begin(); else if (state === 'pause') state = 'play'; }
   if (k === 'p' || k === 'escape') { if (state === 'play') state = 'pause'; else if (state === 'pause') state = 'play'; }
   if (k === 'm') muted = !muted;
@@ -772,7 +772,11 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; if (state === 'play') state = 'pause'; });
-function tapStart() { if (state === 'cut') { cutAdvance(); return; } if (state === 'title' || state === 'over' || state === 'clear') begin(); else if (state === 'pause') state = 'play'; }
+let heard = false;
+function audioGate() { if (state === 'title' && !heard) { heard = true; unlockAudio(); return true; } return false; }
+function unlockAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+for (const ev of ['pointerdown', 'keydown', 'touchstart']) addEventListener(ev, () => { heard = true; unlockAudio(); });
+function tapStart() { if (audioGate()) return; if (state === 'cut') { cutAdvance(); return; } if (state === 'title' || state === 'over' || state === 'clear') begin(); else if (state === 'pause') state = 'play'; }
 cv.addEventListener('pointerdown', e => {
   if (state === 'shop') { shopTap(e); return; }
   if (state === 'cut') { cutAdvance(); return; }
@@ -1316,8 +1320,12 @@ function update(dt) {
 
   // tiros inimigos
   for (const b of ebullets) {
-    b.x += b.vx * dt * (hard ? 1.25 : 1); b.y += b.vy * dt * (hard ? 1.25 : 1);
-    if (p.alive && (p.horse ? hit(b.x, b.y, p.x, p.y - 4, 10, 17) : hit(b.x, b.y, p.x, p.y, 6, 8))) { b.dead = true; hurt(); }
+    // movimento em passos curtos (<= 2px) para o tiro nunca atravessar o heroi entre dois quadros
+    const mx = b.vx * dt * (hard ? 1.25 : 1), my = b.vy * dt * (hard ? 1.25 : 1), ns = Math.max(1, Math.ceil(Math.hypot(mx, my) / 2));
+    for (let i = 0; i < ns && !b.dead; i++) {
+      b.x += mx / ns; b.y += my / ns;
+      if (p.alive && (p.horse ? hit(b.x, b.y, p.x, p.y - 4, 11, 18) : hit(b.x, b.y, p.x, p.y, 7, 9))) { b.dead = true; hurt(); }
+    }
   }
   ebullets = ebullets.filter(b => !b.dead && b.x > -8 && b.x < W + 8 && b.y > -8 && b.y < H + 8);
 
@@ -2851,7 +2859,7 @@ function drawTitle() {
   ctx.imageSmoothingEnabled = false;
   const c = SP.player[Math.floor(time * 4) % 2];
   ctx.drawImage(c, Math.round(W / 2 - c.width * 2), 140, c.width * 4, c.height * 4);
-  if (Math.floor(time * 2) % 2 === 0) text('ENTER para começar', W / 2, 226, '#fff', 8, 'center');
+  if (Math.floor(time * 2) % 2 === 0) text(heard ? 'ENTER para começar' : (matchMedia('(pointer: coarse)').matches ? 'TOQUE para ligar o som' : 'ENTER para ligar o som'), W / 2, 226, '#fff', 8, 'center');
   text('RECORDE $' + hi, W / 2, 246, '#e9b44c', 8, 'center');
   text(padOn ? 'ANALÓGICO move  LB/RB ou X/Y miram  A confirma' : matchMedia('(pointer: coarse)').matches ? 'JOYSTICK move  BOTÕES miram' : 'WASD move  SETAS miram', W / 2, 276, '#d9c9a0', 6, 'center');
   if (padOn) text('CONTROLE CONECTADO', W / 2, 6, '#9be29b', 6, 'center');
