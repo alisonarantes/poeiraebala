@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.3.4';
+const VERSION = '0.3.5';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -567,12 +567,14 @@ function noise(t, d, v, freq) {
 }
 function musTick() {
   try {
-    const want = state === 'title' ? 'gold' : state === 'play' && !bossDone ? (boss ? (level === 8 ? 'duel' : level === 12 ? 'gold' : [5, 6, 7, 10].includes(level) ? 'boss2' : 'boss') : ['town', 'river', 'train', 'camp', 'night', 'mine', 'snow', 'ugly', 'chase', 'grave', 'saloon', 'gorge'][level - 1]) : null;
+    if (state === 'pause') return;
+    const want = state === 'title' ? 'gold' : (state === 'play' || state === 'mount' || state === 'shop') && !bossDone ? (boss ? (level === 8 ? 'duel' : level === 12 ? 'gold' : [5, 6, 7, 10].includes(level) ? 'boss2' : 'boss') : ['town', 'river', 'train', 'camp', 'night', 'mine', 'snow', 'ugly', 'chase', 'grave', 'saloon', 'gorge'][level - 1]) : null;
     if (!want || muted) { mus.theme = null; return; }
     if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
     if (actx.state === 'suspended') actx.resume();
     const th = THEMES[want];
     if (want !== mus.theme) { mus.theme = want; mus.step = 0; mus.next = actx.currentTime + .08; }
+    if (mus.next < actx.currentTime) mus.next = actx.currentTime + .08;
     const sd = 60 / th.bpm / 4;
     while (mus.next < actx.currentTime + .15) {
       const s = mus.step, t = mus.next;
