@@ -1,3 +1,16 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b1410">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poeira & Bala">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Poeira & Bala</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Rye&display=swap">
 <style>
@@ -37,27 +50,26 @@
   }
   .hint {
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px;
-    font-size: 12px; line-height: 1.5; font-weight: 600; color: var(--sand); opacity: .9;
-    max-width: 640px; text-align: center;
+    font-size: clamp(15px, 2.4vmin, 22px); line-height: 1.5; font-weight: 600; color: var(--sand); opacity: .9;
+    max-width: 900px; text-align: center;
   }
   kbd {
-    font-family: inherit; font-weight: 700; font-size: 12px; color: var(--ink); background: var(--sand);
-    border-radius: 2px; padding: 1px 4px; margin-inline: 1px; box-shadow: 0 2px 0 var(--rust);
+    font-family: inherit; font-weight: 700; font-size: 1em; color: var(--ink); background: var(--sand);
+    border-radius: 2px; padding: 1px .35em; margin-inline: 1px; box-shadow: 0 2px 0 var(--rust);
   }
-  @media (max-width: 480px) { .hint { font-size: 11px; } }
-  .pad { display: none; width: 100%; max-width: 420px; justify-content: space-between; align-items: center; user-select: none; -webkit-user-select: none; touch-action: none; }
+    .pad { display: none; width: 100%; max-width: 640px; justify-content: space-between; align-items: center; user-select: none; -webkit-user-select: none; touch-action: none; }
   #joy {
-    position: relative; width: 124px; height: 124px; border-radius: 50%;
+    position: relative; width: clamp(130px, 30vmin, 210px); height: clamp(130px, 30vmin, 210px); border-radius: 50%;
     border: 3px solid var(--frame); background: rgba(233,217,176,.08); touch-action: none;
   }
   #knob {
-    position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px 0 0 -25px;
+    position: absolute; left: 50%; top: 50%; width: 40%; height: 40%; margin: -20% 0 0 -20%;
     border-radius: 50%; background: var(--gold); box-shadow: 0 3px 0 var(--rust); pointer-events: none;
   }
   .aim { display: flex; gap: 8px; }
   .aim button {
-    width: 58px; height: 58px; border-radius: 6px; border: 3px solid var(--frame);
-    background: var(--sand); color: var(--ink); font: 16px "Barlow Condensed", sans-serif;
+    width: clamp(62px, 16vmin, 108px); height: clamp(62px, 16vmin, 108px); border-radius: 8px; border: 3px solid var(--frame);
+    background: var(--sand); color: var(--ink); font: clamp(22px, 5vmin, 38px) "Barlow Condensed", sans-serif;
     box-shadow: 0 4px 0 var(--rust); touch-action: none; -webkit-tap-highlight-color: transparent; padding: 0;
   }
   .aim button.on { background: var(--gold); transform: translateY(3px); box-shadow: 0 1px 0 var(--rust); }
@@ -78,14 +90,14 @@
     <button type="button" data-aim="l" aria-label="Atirar na diagonal esquerda">↖</button>
     <button type="button" data-aim="f" aria-label="Atirar à frente">▲</button>
     <button type="button" data-aim="r" aria-label="Atirar na diagonal direita">↗</button>
-    <button type="button" id="jumpBtn" aria-label="Pular" style="display:none;font-size:12px">PULAR</button>
+    <button type="button" id="jumpBtn" aria-label="Pular" style="display:none;font-size:clamp(13px,3vmin,22px)">PULAR</button>
   </div>
 </div>
 
 <script>
 (() => {
 'use strict';
-const VERSION = '0.2.10';
+const VERSION = '0.3.0';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -827,7 +839,7 @@ function joyDrive(e) {
   if (m2 < 1.5) { joy.x = joy.y = 0; knob.style.transform = ''; return; }
   const mag = Math.min(1, m2 / 7);
   joy.x = dx / m2 * mag; joy.y = dy / m2 * mag;
-  const kv = Math.min(1, m2 / jR) * 28;
+  const kv = Math.min(1, m2 / jR) * (jz.offsetWidth * .22);
   knob.style.transform = `translate(${dx / m2 * kv}px,${dy / m2 * kv}px)`;
 }
 function joyBegin(e, ox, oy, R) { jid = e.pointerId; jox = ox; joy0 = oy; jR = R; joy.on = true; joyDrive(e); }
@@ -2412,16 +2424,25 @@ function buildWorld11() {
   events.sort((a, b) => a.at - b.at);
 }
 function drawBoardGame(x, yb) {
-  const hexes = [[0, -12, '#e0c27a'], [-6, -12, '#2f6a3a'], [6, -12, '#b8553a'], [-3, -17, '#e8c84a'], [3, -17, '#8ac85a'], [-3, -7, '#8a8f98'], [3, -7, '#2f6a3a']];
-  for (const [dx, dy, c] of hexes) {
-    const hx = x + dx - 3, hy = yb + dy - 2;
-    ctx.fillStyle = '#1a3a22'; ctx.fillRect(hx - 1, hy - 1, 8, 6); ctx.fillRect(hx, hy - 2, 6, 1); ctx.fillRect(hx, hy + 5, 6, 1);
-    ctx.fillStyle = c; ctx.fillRect(hx, hy, 6, 4); ctx.fillRect(hx + 1, hy - 1, 4, 1); ctx.fillRect(hx + 1, hy + 4, 4, 1);
-    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(hx + 2, hy + 1, 2, 2);
+  const cy = yb - 12;
+  // moldura azul (mar) e tabuleiro hexagonal de 7 hexagonos, com fichas numeradas
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(x - 18, cy - 12, 38, 31);
+  ctx.fillStyle = '#1c4a7a'; ctx.fillRect(x - 19, cy - 15, 38, 31); ctx.fillStyle = '#2f78b8'; ctx.fillRect(x - 18, cy - 14, 36, 29);
+  const hx = [[-4, -9, '#2f6a3a', 8], [5, -9, '#b8553a', 5], [-9, 0, '#e8c84a', 9], [0, 0, '#d8c27a', 0], [9, 0, '#8ac85a', 6], [-4, 9, '#8a8f98', 10], [5, 9, '#2f6a3a', 4]];
+  for (const [dx, dy, c, n] of hx) {
+    const px = x + dx - 4, py = cy + dy - 4;
+    ctx.fillStyle = '#12301c'; ctx.fillRect(px, py, 9, 8); ctx.fillRect(px - 1, py + 2, 11, 4);
+    ctx.fillStyle = c; ctx.fillRect(px + 1, py + 1, 7, 6); ctx.fillRect(px, py + 2, 9, 4);
+    if (n) { ctx.fillStyle = '#f4ecd0'; ctx.fillRect(px + 3, py + 2, 3, 4); ctx.fillRect(px + 2, py + 3, 5, 2); ctx.fillStyle = (n === 6 || n === 8) ? '#c93a2e' : '#2a1a10'; ctx.fillRect(px + 4, py + 3, 1, 2); }
   }
-  ctx.fillStyle = '#c93a2e'; ctx.fillRect(x - 8, yb - 14, 2, 2); ctx.fillRect(x + 2, yb - 9, 2, 2);
-  ctx.fillStyle = '#2a6ac9'; ctx.fillRect(x + 5, yb - 18, 2, 2); ctx.fillRect(x - 5, yb - 18, 2, 2);
-  ctx.fillStyle = '#fff'; ctx.fillRect(x + 8, yb - 8, 3, 3); ctx.fillStyle = '#2a1a10'; ctx.fillRect(x + 9, yb - 7, 1, 1);
+  // ladrao no deserto, estradas e povoados
+  ctx.fillStyle = '#1a1a1a'; ctx.fillRect(x - 1, cy - 4, 3, 7); ctx.fillRect(x - 2, cy - 1, 5, 3);
+  ctx.fillStyle = '#c93a2e'; ctx.fillRect(x - 10, cy - 6, 3, 3); ctx.fillRect(x - 10, cy - 7, 1, 1); ctx.fillRect(x - 7, cy - 5, 4, 1);
+  ctx.fillStyle = '#f2f2f2'; ctx.fillRect(x + 9, cy + 6, 3, 3); ctx.fillRect(x + 9, cy + 5, 1, 1); ctx.fillRect(x + 5, cy + 6, 4, 1);
+  ctx.fillStyle = '#ff9a2e'; ctx.fillRect(x + 13, cy - 7, 3, 3); ctx.fillRect(x + 13, cy - 8, 1, 1);
+  // dados e cartas ao lado
+  ctx.fillStyle = '#fff'; ctx.fillRect(x + 21, cy - 2, 4, 4); ctx.fillRect(x + 21, cy + 4, 4, 4); ctx.fillStyle = '#c93a2e'; ctx.fillRect(x + 22, cy - 1, 1, 1); ctx.fillRect(x + 23, cy + 1, 1, 1); ctx.fillRect(x + 22, cy + 5, 1, 1); ctx.fillRect(x + 24, cy + 7, 1, 1);
+  ctx.fillStyle = '#2a6ac9'; ctx.fillRect(x - 28, cy - 3, 6, 8); ctx.fillStyle = '#f2f2f2'; ctx.fillRect(x - 27, cy - 2, 4, 6); ctx.fillStyle = '#c9a24a'; ctx.fillRect(x - 26, cy, 2, 2);
 }
 function drawTable(x, yb, bg) {
   ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(x - 15, yb - 2, 30, 6);
@@ -2872,3 +2893,11 @@ function frame2(now) {
 requestAnimationFrame(frame);
 })();
 </script>
+
+<script>
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  addEventListener('load', () => { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (_) {} });
+}
+</script>
+</body>
+</html>
