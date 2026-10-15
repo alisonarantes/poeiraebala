@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.4.7';
+const VERSION = '0.4.10';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -1044,7 +1044,27 @@ function throwBomb(x, y, jit = 8) {
   bombs.push({ sx: x, sy: y, x, y, tx, ty, z: 0, t: 0, fly: 1.1, st: 'fly', fuse: .75, bt: 0 });
   sfx(300, .15, 'triangle', .04, 200);
 }
+// relincho: sobe agudo, trina e desce
+function neigh() {
+  if (muted) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime, d = 1.1, o = actx.createOscillator(), o2 = actx.createOscillator(), g = actx.createGain(), bp = actx.createBiquadFilter(), lfo = actx.createOscillator(), lg = actx.createGain();
+    o.type = 'sawtooth'; o2.type = 'square';
+    for (const [osc, m] of [[o, 1], [o2, 1.01]]) {
+      osc.frequency.setValueAtTime(380 * m, t); osc.frequency.exponentialRampToValueAtTime(1150 * m, t + .22);
+      osc.frequency.setValueAtTime(1150 * m, t + .3); osc.frequency.exponentialRampToValueAtTime(820 * m, t + .55);
+      osc.frequency.exponentialRampToValueAtTime(1000 * m, t + .68); osc.frequency.exponentialRampToValueAtTime(300 * m, t + d);
+    }
+    lfo.frequency.value = 28; lg.gain.value = 55; lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency);
+    bp.type = 'bandpass'; bp.frequency.setValueAtTime(1300, t); bp.Q.value = 1.4;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.1, t + .06); g.gain.setValueAtTime(.1, t + .75); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(bp); o2.connect(bp); bp.connect(g); g.connect(actx.destination);
+    for (const x of [o, o2, lfo]) { x.start(t); x.stop(t + d); }
+  } catch (e) {}
+}
 function startMount() {
+  neigh();
   state = 'mount'; mount = { t: 0, dur: 1.5, dust: 0 };
   sfx(520, .3, 'sawtooth', .05, 260); setTimeout(() => sfx(620, .25, 'sawtooth', .05, 200), 260);
 }
