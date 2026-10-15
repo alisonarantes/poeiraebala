@@ -96,7 +96,7 @@
 <script>
 (() => {
 'use strict';
-const VERSION = '0.5.0';
+const VERSION = '0.5.1';
 let LEVEL = 3400, level = 1, XMIN = 56, XMAX = 200, bannerT = 0;
 const W = 256, H = 320, SPEED = 38, AIM = 50 * Math.PI / 180; // AIM: ângulo da mira lateral, em relação à frente
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
@@ -1718,7 +1718,7 @@ const SHOP = [
   { id: 'wpierce', name: 'PERFURANTE', desc: 'Atravessa inimigos', price: 1000, icon: 'wpierce' },
   { id: 'horse', name: 'CAVALO', desc: 'Veloz + 1 escudo', price: 1500, icon: 'horse' },
   { id: 'life', name: 'VIDA', desc: '+1 vida (cara!)', price: 8000, icon: 'life' },
-  { id: 'cont', name: 'CONTINUE', desc: 'Recomeça a fase no fim de jogo', price: 20000, icon: 'life' },
+  { id: 'cont', name: 'CONTINUE', desc: 'Recomeça a fase no fim de jogo', price: 15000, icon: 'life' },
 ];
 function placeMerchant() {
   let at = Math.floor(LEVEL * .42);
